@@ -1,0 +1,49 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore
+      run: dotnet restore DGC.StaffManagement.sln
+
+    - name: Build (Release)
+      run: dotnet build DGC.StaffManagement.sln --configuration Release --no-restore
+
+    # Run tests only if any *Tests.csproj exists
+    - name: Test (if tests exist)
+      shell: bash
+      run: |
+        if ls **/*Tests.csproj 1> /dev/null 2>&1; then
+          for proj in $(ls **/*Tests.csproj); do
+            echo "Running tests in $proj"
+            dotnet test "$proj" -c Release --no-build --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test_results.trx"
+          done
+        else
+          echo "No test projects found. Skipping tests."
+        fi
+
+    # Optional: publish WebApi as artifact (handy for downloads)
+    - name: Publish WebApi
+      run: dotnet publish DGC.StaffManagement.WebApi/DGC.StaffManagement.WebApi.csproj -c Release -o ./publish
+
+    - name: Upload Publish Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: webapi-publish
+        path: publish
