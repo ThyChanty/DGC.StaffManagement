@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DGC.StaffManagement.Application\DGC.StaffManagement.Application.csproj" />
+    <ProjectReference Include="..\DGC.StaffManagement.Domain\DGC.StaffManagement.Domain.csproj" />
+    <ProjectReference Include="..\DGC.StaffManagement.Shared\DGC.StaffManagement.Shared.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

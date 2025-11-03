@@ -1,0 +1,123 @@
+/* Copyright (c) threenine.co.uk . All rights reserved.
+ 
+   GNU GENERAL PUBLIC LICENSE  Version 3, 29 June 2007
+   This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using DGC.StaffManagement.Application.Interfaces;
+
+namespace DGC.StaffManagement.Infrastructure.Repositories
+{
+    public class Repository<T> : BaseRepository<T>, IRepository<T> where T : class
+    {
+        public Repository(DbContext context) : base(context)
+        {
+        }
+
+        #region Get Functions
+
+        public T? FirstOrDefault(Expression<Func<T, bool>>? predicate = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null,
+            bool enableTracking = true,
+            bool ignoreQueryFilters = false)
+        {
+            IQueryable<T> query = DbSet;
+
+            if (!enableTracking) query = query.AsNoTracking();
+
+            if (include != null) query = include(query);
+
+            if (predicate != null) query = query.Where(predicate);
+
+            if (ignoreQueryFilters) query = query.IgnoreQueryFilters();
+
+            return orderBy != null ? orderBy(query).FirstOrDefault() : query.FirstOrDefault();
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            DbContext?.Dispose();
+        }
+
+
+        public void Delete(T entity)
+        {
+            DbSet.Remove(entity);
+        }
+
+        public void Delete(params T[] entities)
+        {
+            DbSet.RemoveRange(entities);
+        }
+
+        public void Delete(IEnumerable<T> entities)
+        {
+            DbSet.RemoveRange(entities);
+        }
+
+        #region Insert Functions
+
+        public T Insert(T entity)
+        {
+            return DbSet.Add(entity).Entity;
+        }
+
+        public void Insert(params T[] entities)
+        {
+            DbSet.AddRange(entities);
+        }
+
+        public void Insert(IEnumerable<T> entities)
+        {
+            DbSet.AddRange(entities);
+        }
+
+        public T InsertNotExists(Expression<Func<T, bool>> predicate, T entity)
+        {
+            if (DbSet.Any(predicate)) return DbSet.SingleOrDefault(predicate.Compile());
+            DbSet.Add(entity);
+            return entity;
+
+        }
+        
+
+        #endregion
+
+
+        #region Update Functions
+
+        public void Update(T entity)
+        {
+            DbSet.Update(entity);
+        }
+
+        public void Update(params T[] entities)
+        {
+            DbSet.UpdateRange(entities);
+        }
+
+        public void Update(IEnumerable<T> entities)
+        {
+            DbSet.UpdateRange(entities);
+        }
+
+        #endregion
+    }
+}
