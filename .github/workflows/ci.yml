@@ -1,4 +1,4 @@
-name: .NET CI
+name: .NET 9 CI
 
 on:
   push:
@@ -7,26 +7,27 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: Setup .NET 9 SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
+
+    # Optional: respect global.json automatically (no extra step needed)
 
     - name: Restore
       run: dotnet restore DGC.StaffManagement.sln
 
     - name: Build (Release)
-      run: dotnet build DGC.StaffManagement.sln --configuration Release --no-restore
+      run: dotnet build DGC.StaffManagement.sln -c Release --no-restore
 
-    # Run tests only if any *Tests.csproj exists
-    - name: Test (if tests exist)
+    - name: Test (if any *Tests.csproj)
       shell: bash
       run: |
         if ls **/*Tests.csproj 1> /dev/null 2>&1; then
@@ -38,11 +39,10 @@ jobs:
           echo "No test projects found. Skipping tests."
         fi
 
-    # Optional: publish WebApi as artifact (handy for downloads)
-    - name: Publish WebApi
+    - name: Publish WebApi artifact (optional)
       run: dotnet publish DGC.StaffManagement.WebApi/DGC.StaffManagement.WebApi.csproj -c Release -o ./publish
 
-    - name: Upload Publish Artifact
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: webapi-publish
